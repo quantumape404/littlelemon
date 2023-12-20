@@ -10,6 +10,12 @@ import CoreData
 
 struct Menu: View {
     @Environment(\.managedObjectContext) private var viewContext
+    
+    @State var startersIsEnabled = true
+    @State var mainsIsEnabled = true
+    @State var dessertsIsEnabled = true
+    @State var drinksIsEnabled = true
+    
     @State var searchText = ""
     
     var body: some View {
@@ -24,6 +30,18 @@ struct Menu: View {
                 }
                 .padding()
                 .background(Color.primaryColor1)
+                
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 20) {
+                        Toggle("Starters", isOn: $startersIsEnabled)
+                        Toggle("Mains", isOn: $mainsIsEnabled)
+                        Toggle("Desserts", isOn: $dessertsIsEnabled)
+                        Toggle("Drinks", isOn: $drinksIsEnabled)
+                    }
+                    .toggleStyle(MyToggleStyle())
+                    .padding(.horizontal)
+                }
             
                 FetchedObjects(predicate: buildPredicate(),
                     sortDescriptors: buildSortDescriptors()) { (dishes: [Dish]) in
@@ -78,9 +96,15 @@ struct Menu: View {
                                     #selector(NSString.localizedStandardCompare))]
     }
     
-    func buildPredicate() -> NSPredicate {
+    func buildPredicate() -> NSCompoundPredicate {
         let search = searchText == "" ? NSPredicate(value: true) : NSPredicate(format: "title CONTAINS[cd] %@", searchText)
-        return search
+        let starters = !startersIsEnabled ? NSPredicate(format: "category != %@", "starters") : NSPredicate(value: true)
+        let mains = !mainsIsEnabled ? NSPredicate(format: "category != %@", "mains") : NSPredicate(value: true)
+        let desserts = !dessertsIsEnabled ? NSPredicate(format: "category != %@", "desserts") : NSPredicate(value: true)
+        let drinks = !drinksIsEnabled ? NSPredicate(format: "category != %@", "drinks") : NSPredicate(value: true)
+        
+        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [search, starters, mains, desserts, drinks])
+        return compoundPredicate
     }
 
 }
